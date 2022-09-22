@@ -39,7 +39,7 @@
 		   (System.Globalization NumberStyles StringInfo)                    ;DM: Added
 		   ))                                                                ;DM: Added
  
-(set! *warn-on-reflection* true)
+;; (set! *warn-on-reflection* true)
 
 ;;; JSON READER
 
@@ -49,13 +49,15 @@
 
 (defn- default-write-key-fn
   [x]
-  (cond (instance? clojure.lang.Named x)
+  (cond (simple-ident? x)
         (name x)
+        (qualified-ident? x)
+        (format "%s/%s" (namespace x) (name x))
         (nil? x)
         (throw (Exception. "JSON object properties may not be nil"))
         :else (str x)))
 
-(defn- default-value-fn [k v] v)
+(defn- default-value-fn [_ v] v)
 
 (declare -read)
 
@@ -371,7 +373,13 @@
   (.Write out x))                                                                     ;DM: .print
 
 (defn- write-null [x ^TextWriter out]                                                 ;DM: ^PrintWriter
-  (.Write out "null"))                                                                ;DM: .print
+  (.Write out "null"))      
+  
+(defn- write-boolean [x ^TextWriter out]
+  (.Write out (if x "true" "false")))      
+  
+(defn- write-guid [x ^TextWriter out]
+  (.Write out (str "\"" x "\"")))                                                    ;DM: .print
 
 (defn- write-named [x out]
   (write-string (name x) out))
@@ -415,7 +423,10 @@
 ;; nil, true, false
 (extend nil                             JSONWriter {:-write write-null})
 (extend clojure.lang.Named              JSONWriter {:-write write-named})
-(extend System.Boolean                  JSONWriter {:-write write-plain})
+(extend System.Boolean                  JSONWriter {:-write write-boolean})
+
+;; guid
+(extend System.Guid                     JSONWriter {:-write write-guid})
 
 ;; Numbers
 ;; no equivalent to java.lang.Number.  Sigh.
@@ -456,7 +467,7 @@
 
     :escape-unicode boolean
 
-       If true (default) non-ASCII characters are escaped as \\uXXXX
+       If true (default false) non-ASCII characters are escaped as \\uXXXX
 
     :escape-slash boolean
        If true (default) the slash / is escaped as \\/
@@ -465,7 +476,7 @@
 
         Single-argument function called on map keys; return value will
         replace the property names in the output. Must return a
-        string. Default calls clojure.core/name on symbols and
+        string. Default format 'namespace/name' on symbols and
         keywords and clojure.core/str on everything else.
 
     :value-fn function
@@ -483,7 +494,7 @@
         output."
   [x writer & options]                                                                       ; ^Writer  -- can't do. we might get a TextWriter or a Stream
   (let [{:keys [escape-unicode escape-slash key-fn value-fn]
-         :or {escape-unicode true
+         :or {escape-unicode false
               escape-slash true
               key-fn default-write-key-fn
               value-fn default-value-fn}} options]
