@@ -47,12 +47,15 @@
 (def ^:dynamic ^:private *key-fn*)
 (def ^:dynamic ^:private *value-fn*)
 
+(defn- named-str [x]
+  (if (simple-ident? x)
+    (name x)
+    (format "%s/%s" (namespace x) (name x))))
+
 (defn- default-write-key-fn
   [x]
-  (cond (simple-ident? x)
-        (name x)
-        (qualified-ident? x)
-        (format "%s/%s" (namespace x) (name x))
+  (cond (ident? x)
+        (named-str x)
         (nil? x)
         (throw (Exception. "JSON object properties may not be nil"))
         :else (str x)))
@@ -382,7 +385,7 @@
   (.Write out (str "\"" x "\"")))                                                    ;DM: .print
 
 (defn- write-named [x out]
-  (write-string (name x) out))
+  (write-string (named-str x) out))
 
 (defn- write-generic [x out]
   (if (.IsArray (class x))                                                            ;DM: isArray
@@ -422,7 +425,6 @@
 ;;DM: Following added
 ;; nil, true, false
 (extend nil                             JSONWriter {:-write write-null})
-(extend clojure.lang.Named              JSONWriter {:-write write-named})
 (extend System.Boolean                  JSONWriter {:-write write-boolean})
 
 ;; guid
