@@ -20,6 +20,3 @@ obj
 *.user
 *.suo
 *.nupkg
-
-.clj-kondo
-.lsp

@@ -39,7 +39,7 @@
 		   (System.Globalization NumberStyles StringInfo)                    ;DM: Added
 		   ))                                                                ;DM: Added
  
-;; (set! *warn-on-reflection* true)
+(set! *warn-on-reflection* true)
 
 ;;; JSON READER
 
@@ -469,7 +469,7 @@
 
     :escape-unicode boolean
 
-       If true (default false) non-ASCII characters are escaped as \\uXXXX
+       If true (default true) non-ASCII characters are escaped as \\uXXXX
 
     :escape-slash boolean
        If true (default) the slash / is escaped as \\/
@@ -496,7 +496,7 @@
         output."
   [x writer & options]                                                                       ; ^Writer  -- can't do. we might get a TextWriter or a Stream
   (let [{:keys [escape-unicode escape-slash key-fn value-fn]
-         :or {escape-unicode false
+         :or {escape-unicode true
               escape-slash true
               key-fn default-write-key-fn
               value-fn default-value-fn}} options]
