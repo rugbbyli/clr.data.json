@@ -469,7 +469,7 @@
 
     :escape-unicode boolean
 
-       If true (default true) non-ASCII characters are escaped as \\uXXXX
+       If true (default) non-ASCII characters are escaped as \\uXXXX
 
     :escape-slash boolean
        If true (default) the slash / is escaped as \\/
